@@ -1,21 +1,51 @@
 const R = require('react-nexus');
 const React = R.React;
 const styles = require('../styles');
+const data = require('../data');
+
+const Vote = React.createClass({
+  mixins: [R.Component.Mixin],
+
+  onVote() {
+    this.dispatch('uplink://vote', {
+      talkID: this.props.talkID,
+      quality: this.props.quality,
+    });
+  },
+
+  render() {
+    return (
+      <button onClick={this.onVote}>
+        {this.props.quality}
+      </button>
+    );
+  }
+});
 
 const Root = React.createClass({
   mixins: [R.Root.Mixin],
 
   getFluxStoreSubscriptions() {
     return {
-      'clock': 'uplink://clock',
-      'users': 'uplink://users',
+      'votes': 'uplink://votes',
     };
   },
 
   render() {
-    return <div className='Root'>
-      Hello React Nexus. Now is {this.state.clock ? this.state.clock.now : '(unknown)'} and there are {this.state.users ? this.state.users.count : '(unknown)'} active users.
-    </div>;
+    return (
+      <div className='Root'>
+        {Object.keys(data.talks).map((talkID) => {
+          return (
+            this.state.votes[talkID] && <div>
+              <Vote quality="bad" talkID={talkID} /> ({this.state.votes[talkID].bad}) /{' '}
+              <Vote quality="neutral" talkID={talkID} /> ({this.state.votes[talkID].neutral}) /{' '}
+              <Vote quality="good" talkID={talkID} /> ({this.state.votes[talkID].good}):{' '}
+              {data.talks[talkID].title}
+            </div>
+          );
+        })}
+      </div>
+    );
   },
 
   statics: {

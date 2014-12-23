@@ -3,18 +3,38 @@
 require("6to5/polyfill");var Promise = (global || window).Promise = require("lodash-next").Promise;var __DEV__ = (process.env.NODE_ENV !== "production");var __PROD__ = !__DEV__;var __BROWSER__ = (typeof window === "object");var __NODE__ = !__BROWSER__;var R = require("react-nexus");
 var React = R.React;
 var styles = require("../styles");
+var data = require("../data");
+
+var Vote = React.createClass({ displayName: "Vote",
+  mixins: [R.Component.Mixin],
+
+  onVote: function () {
+    console.log({
+      talkID: this.props.talkID,
+      quality: this.props.quality });
+    this.dispatch("uplink://vote", {
+      talkID: this.props.talkID,
+      quality: this.props.quality });
+  },
+
+  render: function () {
+    return (React.createElement("button", { onClick: this.onVote }, this.props.quality));
+  }
+});
 
 var Root = React.createClass({ displayName: "Root",
   mixins: [R.Root.Mixin],
 
   getFluxStoreSubscriptions: function () {
     return {
-      clock: "uplink://clock",
-      users: "uplink://users" };
+      votes: "uplink://votes" };
   },
 
   render: function () {
-    return React.createElement("div", { className: "Root" }, "Hello React Nexus. Now is ", this.state.clock ? this.state.clock.now : "(unknown)", " and there are ", this.state.users ? this.state.users.count : "(unknown)", " active users.");
+    var _this = this;
+    return (React.createElement("div", { className: "Root" }, Object.keys(data.talks).map(function (talkID) {
+      return (_this.state.votes[talkID] && React.createElement("div", null, React.createElement(Vote, { quality: "bad", talkID: talkID }), " (", _this.state.votes[talkID].bad, ") /", " ", React.createElement(Vote, { quality: "neutral", talkID: talkID }), " (", _this.state.votes[talkID].neutral, ") /", " ", React.createElement(Vote, { quality: "good", talkID: talkID }), " (", _this.state.votes[talkID].good, "):", " ", data.talks[talkID].title));
+    })));
   },
 
   statics: {

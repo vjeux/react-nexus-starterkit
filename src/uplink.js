@@ -3,27 +3,40 @@ const _ = R._;
 const cors = require('cors');
 const express = require('express');
 const UplinkSimpleServer = require('nexus-uplink-simple-server');
+const data = require('./data');
 
 module.exports = () => {
-    const uplink = new UplinkSimpleServer({
-      pid: _.guid('pid'),
-      stores: ['/clock', '/users'],
-      rooms: [],
-      actions: [],
-      activityTimeout: 2000,
-      app: express().use(cors()),
-    });
+  const uplink = new UplinkSimpleServer({
+    pid: _.guid('pid'),
+    stores: ['/votes'],
+    rooms: [],
+    actions: [],
+    activityTimeout: 2000,
+    app: express().use(cors()),
+  });
 
-    let users = {};
 
-    function updateAll() {
-      uplink.update({ path: '/clock', value: { now: Date.now() } });
-      uplink.update({ path: '/users', value: { count: Object.keys(users).length } });
-    }
+  let votes = {};
+  for (let talkID in data.talks) {
+    votes[talkID] = {
+      bad: 0,
+      neutral: 0,
+      good: 0
+    };
+  }
 
-    uplink.events.on('create', function({ guid }) { users[guid] = true; });
-    uplink.events.on('delete', function({ guid }) { delete users[guid]; });
+  function updateAll() {
+    uplink.update({ path: '/votes', value: votes });
+  }
 
-    setInterval(updateAll, 100);
-    return uplink;
+  uplink.events.on('vote', function({ guid, talkID, quality }) {
+    votes[talkID].should.be.ok;
+    ['bad', 'neutral', 'good'].should.containEql(quality);
+    votes[talkID][quality] += 1;
+    updateAll();
+  });
+
+  updateAll();
+
+  return uplink;
 };

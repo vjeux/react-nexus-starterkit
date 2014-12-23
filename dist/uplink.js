@@ -5,32 +5,42 @@ var _ = R._;
 var cors = require("cors");
 var express = require("express");
 var UplinkSimpleServer = require("nexus-uplink-simple-server");
+var data = require("./data");
 
 module.exports = function () {
   var uplink = new UplinkSimpleServer({
     pid: _.guid("pid"),
-    stores: ["/clock", "/users"],
+    stores: ["/votes"],
     rooms: [],
     actions: [],
     activityTimeout: 2000,
     app: express().use(cors()) });
 
-  var users = {};
 
-  function updateAll() {
-    uplink.update({ path: "/clock", value: { now: Date.now() } });
-    uplink.update({ path: "/users", value: { count: Object.keys(users).length } });
+  var votes = {};
+  for (var talkID in data.talks) {
+    votes[talkID] = {
+      bad: 0,
+      neutral: 0,
+      good: 0
+    };
   }
 
-  uplink.events.on("create", function (_ref) {
+  function updateAll() {
+    uplink.update({ path: "/votes", value: votes });
+  }
+
+  uplink.events.on("vote", function (_ref) {
     var guid = _ref.guid;
-    users[guid] = true;
-  });
-  uplink.events.on("delete", function (_ref2) {
-    var guid = _ref2.guid;
-    delete users[guid];
+    var talkID = _ref.talkID;
+    var quality = _ref.quality;
+    votes[talkID].should.be.ok;
+    ["bad", "neutral", "good"].should.containEql(quality);
+    votes[talkID][quality] += 1;
+    updateAll();
   });
 
-  setInterval(updateAll, 100);
+  updateAll();
+
   return uplink;
 };
