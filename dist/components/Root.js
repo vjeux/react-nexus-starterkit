@@ -9,9 +9,6 @@ var Vote = React.createClass({ displayName: "Vote",
   mixins: [R.Component.Mixin],
 
   onVote: function () {
-    console.log({
-      talkID: this.props.talkID,
-      quality: this.props.quality });
     this.dispatch("uplink://vote", {
       talkID: this.props.talkID,
       quality: this.props.quality });

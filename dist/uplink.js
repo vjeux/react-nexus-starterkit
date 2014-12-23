@@ -12,7 +12,7 @@ module.exports = function () {
     pid: _.guid("pid"),
     stores: ["/votes"],
     rooms: [],
-    actions: [],
+    actions: ["/vote"],
     activityTimeout: 2000,
     app: express().use(cors()) });
 
@@ -30,7 +30,7 @@ module.exports = function () {
     uplink.update({ path: "/votes", value: votes });
   }
 
-  uplink.events.on("vote", function (_ref) {
+  uplink.actions.on("/vote", function (_ref) {
     var guid = _ref.guid;
     var talkID = _ref.talkID;
     var quality = _ref.quality;

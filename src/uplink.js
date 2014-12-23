@@ -10,7 +10,7 @@ module.exports = () => {
     pid: _.guid('pid'),
     stores: ['/votes'],
     rooms: [],
-    actions: [],
+    actions: ['/vote'],
     activityTimeout: 2000,
     app: express().use(cors()),
   });
@@ -29,7 +29,7 @@ module.exports = () => {
     uplink.update({ path: '/votes', value: votes });
   }
 
-  uplink.events.on('vote', function({ guid, talkID, quality }) {
+  uplink.actions.on('/vote', function({ guid, talkID, quality }) {
     votes[talkID].should.be.ok;
     ['bad', 'neutral', 'good'].should.containEql(quality);
     votes[talkID][quality] += 1;
